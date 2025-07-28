@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue Pomodoro App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      background-color: #ffe4f0;
+      color: #333;
+    }
+    .timer {
+      font-size: 4rem;
+      font-weight: bold;
+    }
+    .mode-btn {
+      margin: 0 0.5rem;
+    }
+    .active-mode {
+      background-color: #ff69b4;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container text-center py-5">
+    <h1 class="mb-4">Pomodoro Timer</h1>
+
+    <div class="btn-group mb-3">
+      <button class="btn btn-outline-dark mode-btn" :class="{ 'active-mode': currentMode === 'work' }" @click="switchMode('work')">Work</button>
+      <button class="btn btn-outline-dark mode-btn" :class="{ 'active-mode': currentMode === 'shortBreak' }" @click="switchMode('shortBreak')">Short Break</button>
+      <button class="btn btn-outline-dark mode-btn" :class="{ 'active-mode': currentMode === 'longBreak' }" @click="switchMode('longBreak')">Long Break</button>
+    </div>
+
+    <div class="mb-3">
+      <label>Work Duration: <input type="number" v-model.number="durations.work" class="form-control d-inline w-auto me-3" /> mins</label>
+     
+      <label>Short Break: <input type="number" v-model.number="durations.shortBreak" class="form-control d-inline w-auto me-3" /> mins</label>
+     
+      <label>Long Break: <input type="number" v-model.number="durations.longBreak" class="form-control d-inline w-auto me-3" /> mins</label>
+    </div>
+
+    <div class="timer my-4">{{ minutes }}:{{ seconds }}</div>
+    <div>
+      <button class="btn btn-primary me-3" @click="startTimer" v-if="!running">Start</button>
+      <button class="btn btn-danger me-3" @click="pauseTimer" v-if="running">Pause</button>
+      <button class="btn btn-warning me-3" @click="resetTimer">Reset</button>
+    </div>
+
+    <p class="mt-4">Pomodoros Completed: {{ pomodorosCompleted }}</p>
+  </div>
+
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          durations: {
+            work: 25,
+            shortBreak: 5,
+            longBreak: 15
+          },
+          currentMode: 'work',
+          timeLeft: 1500,
+          timer: null,
+          running: false,
+          pomodorosCompleted: 0
+        };
+      },
+      computed: {
+        minutes() {
+          return String(Math.floor(this.timeLeft / 60)).padStart(2, '0');
+        },
+        seconds() {
+          return String(this.timeLeft % 60).padStart(2, '0');
+        }
+      },
+      methods: {
+        switchMode(mode) {
+          this.currentMode = mode;
+          this.resetTimer();
+        },
+        startTimer() {
+          if (this.running) return;
+          this.running = true;
+          this.timer = setInterval(() => {
+            if (this.timeLeft > 0) {
+              this.timeLeft--;
+            } else {
+              this.running = false;
+              clearInterval(this.timer);
+              if (this.currentMode === 'work') {
+                this.pomodorosCompleted++;
+                this.switchMode('shortBreak');
+              } else {
+                this.switchMode('work');
+              }
+              this.startTimer();
+            }
+          }, 1000);
+        },
+        pauseTimer() {
+          this.running = false;
+          clearInterval(this.timer);
+        },
+        resetTimer() {
+          this.pauseTimer();
+          this.timeLeft = this.durations[this.currentMode] * 60;
+        }
+      },
+      mounted() {
+        this.resetTimer();
+      }
+    });
+
+    app.mount('#app');
+  </script>
+</body>
+</html>
