@@ -1,55 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vue Pomodoro App</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pomodoro Timer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
     body {
-      background-color: #ffe4f0;
-      color: #333;
+      background-color: #000;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+
+    h1 {
+      background: linear-gradient(to right, #ff69b4, #ffb6c1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
     .timer {
       font-size: 4rem;
       font-weight: bold;
+      color: #ff69b4;
     }
+
     .mode-btn {
-      margin: 0 0.5rem;
+      margin: 0.3rem;
     }
+
     .active-mode {
+      background-color: #ff69b4 !important;
+      color: white !important;
+    }
+
+    .btn-custom {
+      border-radius: 20px;
+      padding: 0.4rem 1.2rem;
+    }
+
+    .btn-start {
       background-color: #ff69b4;
       color: white;
+      border: none;
+    }
+
+    .btn-start:hover {
+      background-color: #ff85c1;
+    }
+
+    .form-control {
+      background-color: #111;
+      color: #fff;
+      border: 1px solid #666;
+    }
+
+    .form-control::placeholder {
+      color: #aaa;
+    }
+
+    .input-task {
+      max-width: 400px;
+      margin: 1rem auto;
+    }
+
+    .task-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .task-list li {
+      background-color: #111;
+      border-left: 5px solid #ff69b4;
+      padding: 0.6rem;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+      text-align: left;
+      box-shadow: 0 2px 4px rgba(255,255,255,0.05);
+    }
+
+    @media (max-width: 576px) {
+      .timer {
+        font-size: 3rem;
+      }
+
+      .mode-btn {
+        width: 100%;
+        margin: 0.25rem 0;
+      }
+
+      .form-control {
+        width: 100% !important;
+        margin-bottom: 0.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="app" class="container text-center py-5">
-    <h1 class="mb-4">Pomodoro Timer</h1>
+  <div id="app" class="container py-5 text-center">
+    <h1 class="mb-4">🌙 Pomodoro Timer</h1>
 
-    <div class="btn-group mb-3">
-      <button class="btn btn-outline-dark mode-btn" :class="{ 'active-mode': currentMode === 'work' }" @click="switchMode('work')">Work</button>
-      <button class="btn btn-outline-dark mode-btn" :class="{ 'active-mode': currentMode === 'shortBreak' }" @click="switchMode('shortBreak')">Short Break</button>
-      <button class="btn btn-outline-dark mode-btn" :class="{ 'active-mode': currentMode === 'longBreak' }" @click="switchMode('longBreak')">Long Break</button>
+    <!-- Mode Buttons -->
+    <div class="btn-group mb-3 flex-wrap justify-content-center">
+      <button class="btn btn-outline-light mode-btn btn-custom" 
+              :class="{ 'active-mode': currentMode === 'work' }" 
+              @click="switchMode('work')">Work</button>
+      <button class="btn btn-outline-light mode-btn btn-custom" 
+              :class="{ 'active-mode': currentMode === 'shortBreak' }" 
+              @click="switchMode('shortBreak')">Short Break</button>
+      <button class="btn btn-outline-light mode-btn btn-custom" 
+              :class="{ 'active-mode': currentMode === 'longBreak' }" 
+              @click="switchMode('longBreak')">Long Break</button>
     </div>
 
-    <div class="mb-3">
-      <label>Work Duration: <input type="number" v-model.number="durations.work" class="form-control d-inline w-auto me-3" /> mins</label>
-     
-      <label>Short Break: <input type="number" v-model.number="durations.shortBreak" class="form-control d-inline w-auto me-3" /> mins</label>
-     
-      <label>Long Break: <input type="number" v-model.number="durations.longBreak" class="form-control d-inline w-auto me-3" /> mins</label>
+    <!-- Duration Inputs -->
+    <div class="row justify-content-center mb-3">
+      <div class="col-md-3 col-sm-12 mb-2">
+        <label>Work: <input type="number" v-model.number="durations.work" class="form-control" /> mins</label>
+      </div>
+      <div class="col-md-3 col-sm-12 mb-2">
+        <label>Short Break: <input type="number" v-model.number="durations.shortBreak" class="form-control" /> mins</label>
+      </div>
+      <div class="col-md-3 col-sm-12 mb-2">
+        <label>Long Break: <input type="number" v-model.number="durations.longBreak" class="form-control" /> mins</label>
+      </div>
     </div>
 
+    <!-- Timer Display -->
     <div class="timer my-4">{{ minutes }}:{{ seconds }}</div>
-    <div>
-      <button class="btn btn-primary me-3" @click="startTimer" v-if="!running">Start</button>
-      <button class="btn btn-danger me-3" @click="pauseTimer" v-if="running">Pause</button>
-      <button class="btn btn-warning me-3" @click="resetTimer">Reset</button>
+
+    <!-- Task Input -->
+    <div class="input-task mb-4">
+      <input type="text" class="form-control mb-2" v-model="taskInput" placeholder="Enter task before you start..."/>
     </div>
 
-    <p class="mt-4">Pomodoros Completed: {{ pomodorosCompleted }}</p>
+    <!-- Controls -->
+    <div class="mb-4">
+      <button class="btn btn-start me-2 btn-custom" @click="startTimer" v-if="!running">Start</button>
+      <button class="btn btn-danger me-2 btn-custom" @click="pauseTimer" v-if="running">Pause</button>
+      <button class="btn btn-warning btn-custom" @click="resetTimer">Reset</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="text-start mx-auto" style="max-width: 500px;">
+      <p><strong>✅ Pomodoros Completed:</strong> {{ pomodorosCompleted }}</p>
+      <p><strong>📝 Task List:</strong></p>
+      <ul class="task-list">
+        <li v-for="(task, index) in tasks" :key="index">
+          {{ task.text }} <br>
+          <small class="text-muted">⏱ Time Taken: {{ task.duration }} minutes</small>
+        </li>
+      </ul>
+    </div>
   </div>
 
   <script>
@@ -65,7 +167,10 @@
           timeLeft: 1500,
           timer: null,
           running: false,
-          pomodorosCompleted: 0
+          pomodorosCompleted: 0,
+          taskInput: '',
+          tasks: [],
+          taskDuration: 25
         };
       },
       computed: {
@@ -78,25 +183,43 @@
       },
       methods: {
         switchMode(mode) {
+          this.pauseTimer();
           this.currentMode = mode;
-          this.resetTimer();
+          this.timeLeft = this.durations[mode] * 60;
         },
         startTimer() {
           if (this.running) return;
+
+          if (this.currentMode === 'work' && this.taskInput.trim() === '') {
+            alert('Please enter a task before starting a work session.');
+            return;
+          }
+
           this.running = true;
+          this.taskDuration = this.durations[this.currentMode];
+
           this.timer = setInterval(() => {
             if (this.timeLeft > 0) {
               this.timeLeft--;
             } else {
-              this.running = false;
               clearInterval(this.timer);
+              this.running = false;
+
               if (this.currentMode === 'work') {
                 this.pomodorosCompleted++;
+                if (this.taskInput.trim() !== '') {
+                  this.tasks.push({
+                    text: this.taskInput.trim(),
+                    duration: this.taskDuration
+                  });
+                  this.taskInput = '';
+                }
                 this.switchMode('shortBreak');
               } else {
                 this.switchMode('work');
               }
-              this.startTimer();
+
+              this.startTimer(); // Automatically start the next session
             }
           }, 1000);
         },
